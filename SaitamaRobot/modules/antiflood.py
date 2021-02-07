@@ -1,19 +1,23 @@
 import html
 from typing import Optional, List
 
-from telegram import Message, Chat, Update, User, ChatPermissions
+from telegram import Message, Chat, Update, Bot, User, InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, ChatPermissions
 
 from SaitamaRobot import TIGERS, WOLVES, dispatcher
-from SaitamaRobot.modules.helper_funcs.chat_status import (bot_admin,
-                                                           is_user_admin,
-                                                           user_admin,
-                                                           user_admin_no_reply)
+from SaitamaRobot.modules.sql.approve_sql import is_approved
+from SaitamaRobot.modules.helper_funcs.chat_status import (
+    bot_admin, can_restrict, connection_status, is_user_admin, user_admin,
+    user_admin_no_reply)
 from SaitamaRobot.modules.log_channel import loggable
 from SaitamaRobot.modules.sql import antiflood_sql as sql
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext, CallbackQueryHandler, CommandHandler, Filters, MessageHandler, run_async
 from telegram.utils.helpers import mention_html, escape_markdown
+from SaitamaRobot import dispatcher
+from SaitamaRobot.modules.helper_funcs.chat_status import is_user_admin, user_admin, can_restrict
 from SaitamaRobot.modules.helper_funcs.string_handling import extract_time
+from SaitamaRobot.modules.log_channel import loggable
+from SaitamaRobot.modules.sql import antiflood_sql as sql
 from SaitamaRobot.modules.connection import connected
 from SaitamaRobot.modules.helper_funcs.alternate import send_message
 FLOOD_GROUP = 3
@@ -33,6 +37,10 @@ def check_flood(update, context) -> str:
         sql.update_flood(chat.id, None)
         return ""
 
+      # ignore approved users
+    if is_approved(chat.id, user.id):
+        sql.update_flood(chat.id, None)
+        return
     should_ban = sql.update_flood(chat.id, user.id)
     if not should_ban:
         return ""
@@ -333,28 +341,28 @@ def __chat_settings__(chat_id, user_id):
         return "Antiflood has been set to`{}`.".format(limit)
 
 
-# __help__ = """
-# Antiflood allows you to take action on users that send more than x messages in a row. Exceeding the set flood \
-# will result in restricting that user.
+__help__ = """
+Antiflood allows you to take action on users that send more than x messages in a row. Exceeding the set flood \
+will result in restricting that user.
 
-#  This will mute users if they send more than 10 messages in a row, bots are ignored.
-#  • `/flood`*:* Get the current flood control setting
+ This will mute users if they send more than 10 messages in a row, bots are ignored.
+ • `/flood`*:* Get the current flood control setting
 
-# • *Admins only:*
-#  • `/setflood <int/'no'/'off'>`*:* enables or disables flood control
-#  *Example:* `/setflood 10`
-#  • `/setfloodmode <ban/kick/mute/tban/tmute> <value>`*:* Action to perform when user have exceeded flood limit. ban/kick/mute/tmute/tban
+• *Admins only:*
+ • `/setflood <int/'no'/'off'>`*:* enables or disables flood control
+ *Example:* `/setflood 10`
+ • `/setfloodmode <ban/kick/mute/tban/tmute> <value>`*:* Action to perform when user have exceeded flood limit. ban/kick/mute/tmute/tban
 
-# • *Note:*
-#  • Value must be filled for tban and tmute!!
-#  It can be:
-#  `5m` = 5 minutes
-#  `6h` = 6 hours
-#  `3d` = 3 days
-#  `1w` = 1 week
-#  """
+• *Note:*
+ • Value must be filled for tban and tmute!!
+ It can be:
+ `5m` = 5 minutes
+ `6h` = 6 hours
+ `3d` = 3 days
+ `1w` = 1 week
+ """
 
-# __mod_name__ = "Anti-Flood"
+__mod_name__ = "Anti-Flood"
 
 FLOOD_BAN_HANDLER = MessageHandler(
     Filters.all & ~Filters.status_update & Filters.group, check_flood)
