@@ -3,8 +3,8 @@ import textwrap
 import os
 from SaitamaRobot.events import register
 from SaitamaRobot import (
-    TEMP_DOWNLOAD_DIRECTORY,
-    bot )
+    TEMP_DOWNLOAD_DIRECTORY, )
+from telegram.ext import CallbackContext, Filters, MessageHandler, run_async
 
 
 @register(outgoing=True, pattern="^/memify (.*)")
