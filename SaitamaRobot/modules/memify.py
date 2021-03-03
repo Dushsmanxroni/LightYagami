@@ -3,7 +3,6 @@ import textwrap
 import os
 from SaitamaRobot.events import register
 from SaitamaRobot import (
-    LOGS,
     TEMP_DOWNLOAD_DIRECTORY,
     bot )
 
