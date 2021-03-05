@@ -15,7 +15,7 @@ from telethon.tl.types import DocumentAttributeVideo, DocumentAttributeAudio
 from telethon import events
 
 from SaitamaRobot.events import register
-from SaitamaRobot.modules.helper_funcs.utils import progress
+from SaitamaRobot.modules.utils import progress
 from telethon.errors.rpcerrorlist import YouBlockedUserError
 from telethon.tl.functions.messages import ImportChatInviteRequest as Get
 from validators.url import url
