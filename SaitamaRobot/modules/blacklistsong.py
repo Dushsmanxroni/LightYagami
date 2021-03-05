@@ -1,5 +1,5 @@
 from pyrogram.types.messages_and_media import message
-from config import OWNER_ID
+from SaitamaRobot import OWNER_ID
 from pyrogram import filters
 from pyrogram.errors import BadRequest
 from SaitamaRobot import pbot
