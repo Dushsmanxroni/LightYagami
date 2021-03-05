@@ -48,3 +48,4 @@ configparser
 bing_image_downloader
 html2text
 pytube
+youtube-search-python
