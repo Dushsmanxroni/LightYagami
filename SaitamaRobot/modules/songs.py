@@ -1,13 +1,12 @@
-from pyrogram import Client, filters
-import asyncio
 import os
+
+import aiohttp
+from pyrogram import filters
 from pytube import YouTube
-from pyrogram.types import InlineKeyboardMarkup
-from pyrogram.types import InlineKeyboardButton
 from youtubesearchpython import VideosSearch
-from SaitamaRobot.korasong import ignore_blacklisted_users, get_arg
-from SaitamaRobot import pbot, LOGGER
-from SaitamaRobot.sql.chat_sql import add_chat_to_db
+
+from SaitamaRobot import LOGGER, pbot
+from SaitamaRobot.utils.ut import get_arg
 
 
 def yt_search(song):
@@ -21,19 +20,38 @@ def yt_search(song):
         return url
 
 
-@pbot.on_message(filters.create(ignore_blacklisted_users) & filters.command("song"))
+class AioHttp:
+    @staticmethod
+    async def get_json(link):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(link) as resp:
+                return await resp.json()
+
+    @staticmethod
+    async def get_text(link):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(link) as resp:
+                return await resp.text()
+
+    @staticmethod
+    async def get_raw(link):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(link) as resp:
+                return await resp.read()
+
+
+@pbot.on_message(filters.command("song"))
 async def song(client, message):
-    chat_id = message.chat.id
+    message.chat.id
     user_id = message.from_user["id"]
-    add_chat_to_db(str(chat_id))
     args = get_arg(message) + " " + "song"
     if args.startswith(" "):
         await message.reply("Enter a song name. Check /help")
         return ""
-    status = await message.reply("🔎Searching song 🎶 Please wait some time ⏳️ © @kittu5588 ")
+    status = await message.reply("Processing...")
     video_link = yt_search(args)
     if not video_link:
-        await status.edit("🥺Song not found.")
+        await status.edit("Song not found.")
         return ""
     yt = YouTube(video_link)
     audio = yt.streams.filter(only_audio=True).first()
@@ -43,9 +61,9 @@ async def song(client, message):
         await status.edit("Failed to download song")
         LOGGER.error(ex)
         return ""
-    rename = os.rename(download, f"{str(user_id)}.mp3")
+    os.rename(download, f"{str(user_id)}.mp3")
     await pbot.send_chat_action(message.chat.id, "upload_audio")
-    await oko.send_audio(
+    await pbot.send_audio(
         chat_id=message.chat.id,
         audio=f"{str(user_id)}.mp3",
         duration=int(yt.length),
@@ -61,10 +79,10 @@ __help__ = """
  *You can either enter just the song name or both the artist and song
   name. *
 
-  /song <songname artist(optional)>: uploads the song in it's best quality available
-  /video <songname artist(optional)>: uploads the video song in it's best quality available
-  /lyrics <song>: returns the lyrics of that song.
+ ✪ /song <songname artist(optional)>*:* uploads the song in it's best quality available
+ ✪ /video <songname artist(optional)>*:* uploads the video song in it's best quality available
+ ✪ /lyrics <song>*:* returns the lyrics of that song.
 
 """
 
-__mod_name__ = "Song"
+__mod_name__ = "Music 🎧"
